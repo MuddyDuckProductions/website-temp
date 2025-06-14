@@ -4,7 +4,7 @@ import Trails from "./Trails";
 
 const Destinations: React.FC = () => {
   return (
-    <div className="w-full min-h-screen bg-gray-900 text-white px-4 py-8">
+    <div className="w-full min-h-auto bg-gray-900 text-white px-4 py-8">
       <h1 className="text-center text-4xl font-extrabold mb-10" style={{ color: "#EEEE24" }}>
         Destinations
       </h1>
