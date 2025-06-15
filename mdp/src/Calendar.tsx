@@ -72,7 +72,7 @@ const CalendarView: React.FC = () => {
       .forEach(a => {
         a.setAttribute('target', '_blank')
         a.setAttribute('rel', 'noopener noreferrer')
-        a.classList.add('underline', 'text-2xl')
+        a.classList.add('underline', 'text-xl')
       })
   }, [selectedEvent])
 
