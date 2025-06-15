@@ -51,23 +51,28 @@ const OnX: React.FC = () => {
           rawTrails,
           meta,
         ]: [
-          Omit<Trail, "displayName" | "firstTime">[],
+          Omit<Trail, "displayName" | "firstTime" | "location" | "description" | "difficulty">[],
           { file: string; displayName: string; location?: string; description?: string; difficulty?: string }[]
         ]) => {
           const metaMap = Object.fromEntries(meta.map((m) => [m.file, m]));
+          const allowedDifficulties = ["Easy", "Moderate", "Hard"];
 
           const withTimes: Trail[] = rawTrails
             .map((t) => {
               const feat = t.geoJson.features[0];
               const time = feat?.properties?.time as string;
               const meta = metaMap[t.file] || {};
+              const difficulty = allowedDifficulties.includes(meta.difficulty || "")
+                ? (meta.difficulty as "Easy" | "Moderate" | "Hard")
+                : undefined;
+
               return {
                 ...t,
                 firstTime: time,
                 displayName: meta.displayName || t.name,
                 location: meta.location || "Unknown",
                 description: meta.description || "No description provided.",
-                difficulty: meta.difficulty || "Moderate",
+                difficulty,
               };
             })
             .sort(
@@ -102,7 +107,6 @@ const OnX: React.FC = () => {
     <div className="flex-1 pt-14 px-4">
       <h2 className="text-2xl font-bold mb-4 text-center text-[#eeee24]">Trail Maps</h2>
 
-      {/* Mini-map grid */}
       <div className="flex flex-wrap gap-4 justify-center">
         {trails.map((trail, i) => (
           <div key={i} className="flex flex-col items-center">
@@ -124,17 +128,13 @@ const OnX: React.FC = () => {
                 {renderPolyline(trail.geoJson)}
               </MapContainer>
             </div>
-            <div
-              className="mt-2 text-center font-medium"
-              style={{ color: "#eeee24" }}
-            >
+            <div className="mt-2 text-center font-medium" style={{ color: "#eeee24" }}>
               {trail.displayName}
             </div>
           </div>
         ))}
       </div>
 
-      {/* Modal for enlarged map */}
       <Modal
         isOpen={!!selectedTrail}
         onRequestClose={() => setSelectedTrail(null)}
@@ -175,9 +175,7 @@ const OnX: React.FC = () => {
             </div>
 
             <div style={{ flex: 1, padding: "1rem", color: "#eeee24" }}>
-              <h2 className="text-2xl font-bold mb-4">
-                {selectedTrail.displayName}
-              </h2>
+              <h2 className="text-2xl font-bold mb-4">{selectedTrail.displayName}</h2>
               <p className="mb-2">
                 <strong>Location:</strong> {selectedTrail.location}
               </p>
@@ -196,7 +194,7 @@ const OnX: React.FC = () => {
                         : "#ff0000",
                   }}
                 >
-                  {selectedTrail.difficulty}
+                  {selectedTrail.difficulty ?? "Unknown"}
                 </span>
               </p>
               <p className="mb-2">
