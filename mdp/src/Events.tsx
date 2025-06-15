@@ -14,7 +14,7 @@ const Events = () => {
       const now = new Date().toISOString();
       const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(
         calendarId
-      )}/events?key=${apiKey}&timeMin=${now}&maxResults=2&singleEvents=true&orderBy=startTime`;
+      )}/events?key=${apiKey}&timeMin=${now}&maxResults=5&singleEvents=true&orderBy=startTime`;
 
       try {
         const response = await fetch(url);

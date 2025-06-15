@@ -6,17 +6,17 @@ import Destinations from "./Destinations";
 
 function Body() {
   return (
-    <div className="w-full pt-48 pb-0 text-lg space-y-0">
-      <section id="about-me">
+    <div className="w-full pt-0 pb-0 text-lg space-y-0">
+      <section id="about-me"  className="scroll-mt-[6px]">
       <AboutMe />
       </section>
-      <section id="media"> 
+      <section id="media" className="scroll-mt-[34px]"> 
       <Media />
       </section>
-      <section id="builds">
+      <section id="builds"  className="scroll-mt-[8px]">
       <Builds />
       </section>
-      <section id="destinations">
+      <section id="destinations"  className="scroll-mt-[4px]">
       <Destinations />
       </section>
           </div>

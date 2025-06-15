@@ -2,7 +2,8 @@ function NavBar() {
   return (
     <nav className="w-full bg-[#242424] p-4">
       <div className="max-w-6xl mx-auto flex justify-evenly items-center pt-0">
-        <a href="/#about-me" className="text-white hover:text-yellow-400 text-4xl">About Me</a>
+        <a href="/#about-me" className="text-white hover:text-yellow-400 text-4xl">Home</a>
+        <a href="/#media" className="text-white hover:text-yellow-400 text-4xl">Media</a> 
         <a href="/gallery" className="text-white hover:text-yellow-400 text-4xl">Gallery</a>
         <a
           href="https://www.youtube.com/@muddyduckoffroad"

@@ -1,74 +1,147 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { MapContainer, TileLayer, Polyline, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import { Link } from "react-router-dom";
 
-type Trail = {
+type RawTrail = {
+  file: string;
   name: string;
-  location: string;
-  difficulty: "Easy" | "Moderate" | "Hard";
-  description: string;
-  link?: string;
+  geoJson: GeoJSON.FeatureCollection;
+  bounds: [[number, number], [number, number]];
+  firstTime: string;
 };
 
-const dummyTrails: Trail[] = [
-  {
-    name: "Goose Creek Gulch",
-    location: "Francis Marion National Forest, SC",
-    difficulty: "Moderate",
-    description: "A scenic trail with shallow water crossings, light mud, and deep woods. Great for overlanding.",
-  },
-  {
-    name: "Swamp Fox Loop",
-    location: "Berkeley County, SC",
-    difficulty: "Easy",
-    description: "Wide and well-maintained forest roads. Good for beginners or scenic cruises.",
-  },
-  {
-    name: "Cypress Crawl",
-    location: "Near Charleston, SC",
-    difficulty: "Hard",
-    description: "Tight trails, deep mud, and technical turns. Not recommended without lockers and a winch.",
-  },
-];
+type Meta = {
+  file: string;
+  displayName?: string;
+  location?: string;
+  difficulty?: "Easy" | "Moderate" | "Hard";
+  description?: string;
+};
+
+type Trail = RawTrail & Meta;
+
+const FitBounds: React.FC<{ bounds: L.LatLngBoundsExpression }> = ({ bounds }) => {
+  const map = useMap();
+  useEffect(() => {
+    map.fitBounds(bounds, { padding: [5, 5] });
+  }, [bounds, map]);
+  return null;
+};
 
 const Trails: React.FC = () => {
+  const [trails, setTrails] = useState<Trail[]>([]);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/trails/trails.json").then((r) => r.json()),
+      fetch("/trails/meta.json")
+        .then((r) => r.text())
+        .then((txt) => {
+          try {
+            return txt.trim() ? JSON.parse(txt) : [];
+          } catch {
+            console.warn("meta.json invalid, defaulting to []");
+            return [];
+          }
+        }),
+    ])
+      .then(([rawTrails, meta]: [RawTrail[], Meta[]]) => {
+        const metaMap = Object.fromEntries(meta.map((m) => [m.file, m]));
+        const merged: Trail[] = rawTrails.map((t) => ({
+          ...t,
+          ...metaMap[t.file],
+        }));
+        merged.sort(
+          (a, b) =>
+            new Date(b.firstTime).getTime() - new Date(a.firstTime).getTime()
+        );
+        setTrails(merged.slice(0, 3));
+      })
+      .catch((err) => console.error("Error loading trails or meta:", err));
+  }, []);
+
+  const satelliteLayer = (
+    <TileLayer
+      url="https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
+      subdomains={["0", "1", "2", "3"]}
+    />
+  );
+
   return (
-    <div className="p-6 text-white">
-      <h1 className="text-3xl font-bold mb-6 text-yellow-400">Trail Directory</h1>
-      <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {dummyTrails.map((trail, index) => (
+    <div className="p-6 text-white space-y-6">
+      <h1 className="text-3xl font-bold text-center" style={{ color: "#eeee24" }}>
+        Latest Trails
+      </h1>
+
+      {trails.map((t) => {
+        const displayName = t.displayName || t.name;
+        const location = t.location || "Location: N/A";
+        const difficulty = t.difficulty || "Moderate";
+        const description = t.description || "No description provided.";
+
+        return (
           <div
-            key={index}
-            className="bg-gray-800 rounded-2xl shadow-lg p-5 border border-yellow-500 hover:bg-gray-700 transition"
+            key={t.file}
+            className="flex bg-gray-800 rounded-xl overflow-hidden md:h-auto"
           >
-            <h2 className="text-xl font-bold text-yellow-300">{trail.name}</h2>
-            <p className="text-sm text-gray-400 mb-2">{trail.location}</p>
-            <p className="text-sm mb-2">
-              <span className="font-semibold">Difficulty:</span>{" "}
-              <span
-                className={
-                  trail.difficulty === "Easy"
-                    ? "text-green-400"
-                    : trail.difficulty === "Moderate"
-                    ? "text-yellow-400"
-                    : "text-red-400"
-                }
+            <div className="flex items-center justify-center w-full md:w-[300px] p-2 border-b md:border-b-0 md:border-r border-gray-700">
+              <Link
+                to={`/onx?highlight=${encodeURIComponent(t.file)}`}
+                className="block w-full aspect-[3/2] md:h-[240px] md:w-full hover:brightness-90 transition"
               >
-                {trail.difficulty}
-              </span>
-            </p>
-            <p className="text-sm mb-4">{trail.description}</p>
-            {trail.link && (
-              <a
-                href={trail.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-yellow-400 underline"
-              >
-                View Trail Map
-              </a>
-            )}
+                <MapContainer
+                  className="w-full h-full"
+                  zoom={13}
+                  scrollWheelZoom={false}
+                  zoomControl={false}
+                  center={[
+                    (t.bounds[0][0] + t.bounds[1][0]) / 2,
+                    (t.bounds[0][1] + t.bounds[1][1]) / 2,
+                  ]}
+                >
+                  {satelliteLayer}
+                  <FitBounds bounds={t.bounds} />
+                  <Polyline
+                    positions={t.geoJson.features.flatMap((f) =>
+                      (f.geometry as GeoJSON.LineString).coordinates.map(
+                        ([lng, lat]) => [lat, lng] as [number, number]
+                      )
+                    )}
+                    pathOptions={{ color: "#eeee24" }}
+                  />
+                </MapContainer>
+              </Link>
+            </div>
+
+            <div className="flex flex-col justify-center p-4 flex-1 min-h-[240px]">
+              <h2 className="text-xl font-semibold mb-1" style={{ color: "#eeee24" }}>
+                {displayName}
+              </h2>
+              <p className="text-sm text-gray-300">{location}</p>
+              <p className="text-sm mb-2">
+                <span className="font-semibold">Difficulty:</span>{" "}
+                <span
+                  style={{
+                    color:
+                      difficulty === "Easy"
+                        ? "#00ff00"
+                        : difficulty === "Moderate"
+                        ? "#eeee24"
+                        : "#ff0000",
+                  }}
+                >
+                  {difficulty}
+                </span>
+              </p>
+              <p className="text-sm text-gray-200 whitespace-pre-wrap">
+                {description}
+              </p>
+            </div>
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 };
