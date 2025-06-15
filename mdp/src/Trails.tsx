@@ -78,7 +78,7 @@ const Trails: React.FC = () => {
       {trails.map((t) => {
         const displayName = t.displayName || t.name;
         const location = t.location || "Location: N/A";
-        const difficulty = t.difficulty || "Moderate";
+        const difficulty = t.difficulty || "Unknown";
         const description = t.description || "No description provided.";
 
         return (
