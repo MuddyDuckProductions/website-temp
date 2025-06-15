@@ -27,7 +27,6 @@ const CalendarView: React.FC = () => {
   const calendarId = import.meta.env.VITE_GOOGLE_CALENDAR_ID as string
   const apiKey    = import.meta.env.VITE_GOOGLE_API_KEY     as string
 
-  // Fetch events from Google Calendar
   useEffect(() => {
     if (!calendarId || !apiKey) return
 
@@ -63,8 +62,6 @@ const CalendarView: React.FC = () => {
     })()
   }, [calendarId, apiKey])
 
-  // Ensure any <a> in the injected HTML opens in a new tab,
-  // is underlined, and uses a larger font size.
   useEffect(() => {
     if (!descRef.current) return
     descRef.current
@@ -78,7 +75,7 @@ const CalendarView: React.FC = () => {
 
   return (
     <>
-      <div className="pt-56" style={{ height: '720px' }}>
+      <div className="pt-4">
         <BigCalendar
           localizer={localizer}
           events={events}
@@ -86,7 +83,7 @@ const CalendarView: React.FC = () => {
           endAccessor="end"
           defaultView={Views.MONTH}
           views={[Views.MONTH, Views.WEEK, Views.DAY]}
-          style={{ height: '100%' }}
+          style={{ height: '540px' }}
           popup
           onSelectEvent={evt => setSelectedEvent(evt as CalendarEvent)}
         />

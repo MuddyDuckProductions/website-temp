@@ -4,8 +4,7 @@ const Events = () => {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const calendarId =
-    "c_df07081168fc31da642feb3e77356dda9abce23e5375ce3e03beb56148f4232c@group.calendar.google.com";
+  const calendarId = import.meta.env.VITE_GOOGLE_CALENDAR_ID as string;
   const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
 
   useEffect(() => {
@@ -34,22 +33,44 @@ const Events = () => {
 
   return (
     <div className="bg-gray-900 p-6 rounded-xl shadow-lg text-white">
-          {loading ? (
+      {loading ? (
         <p>Loading events...</p>
       ) : events.length === 0 ? (
         <p>No upcoming events found.</p>
       ) : (
         <ul className="space-y-4">
           {events.map((event) => {
-            const start = event.start.dateTime || event.start.date || "";
-            const dateObj = new Date(start);
-            const formattedDate = dateObj.toLocaleString(undefined, {
+            const startRaw = event.start.dateTime || event.start.date;
+            const endRaw = event.end.dateTime || event.end.date;
+
+            const startDate = new Date(startRaw);
+            const endDate = new Date(endRaw);
+
+            const isMultiDay =
+              startDate.toDateString() !== endDate.toDateString();
+
+            const startStr = `${startDate.toLocaleDateString(undefined, {
               month: "short",
               day: "numeric",
               year: "numeric",
+            })} – ${startDate.toLocaleTimeString(undefined, {
               hour: "2-digit",
               minute: "2-digit",
-            });
+            })}`;
+
+            const endStr = isMultiDay
+              ? `${endDate.toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })} – ${endDate.toLocaleTimeString(undefined, {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}`
+              : endDate.toLocaleTimeString(undefined, {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
 
             return (
               <li
@@ -59,7 +80,9 @@ const Events = () => {
                 <h3 className="text-xl font-semibold">
                   {event.summary || "Untitled Event"}
                 </h3>
-                <p className="text-yellow-300">{formattedDate}</p>
+                <p className="text-yellow-300">
+                  {startStr} → {endStr}
+                </p>
 
                 {event.location && (
                   <a
