@@ -1,23 +1,16 @@
-// src/App.tsx
+
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 import { Suspense, lazy } from "react";
+import ScrollToTop from "./ScrollToTop";
 
 const Home = lazy(() => import("./Home"));
 const MuddyDuck = lazy(() => import("./MuddyDuck"));
 const CleverGirl = lazy(() => import("./CleverGirl"));
 const Calendar = lazy(() => import("./Calendar"));
 const OnX = lazy(() => import("./OnX"));
-
-function ScrollToTop() {
-  const { pathname } = useLocation();
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-  return null;
-}
 
 export default function App() {
   const [headerHeight, setHeaderHeight] = useState(0);
