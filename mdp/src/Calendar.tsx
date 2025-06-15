@@ -1,18 +1,17 @@
-// src/Calendar.tsx
 import React, { useEffect, useState, useRef } from 'react'
 import {
   Calendar as BigCalendar,
   momentLocalizer,
   Views,
 } from 'react-big-calendar'
-import moment from 'moment'
+import moment from 'moment-timezone'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 
 type CalendarEvent = {
   title: string
   start: Date
   end: Date
-  description?: string  // may contain HTML
+  description?: string
   location?: string
   htmlLink?: string
 }
@@ -25,7 +24,7 @@ const CalendarView: React.FC = () => {
   const descRef = useRef<HTMLDivElement>(null)
 
   const calendarId = import.meta.env.VITE_GOOGLE_CALENDAR_ID as string
-  const apiKey    = import.meta.env.VITE_GOOGLE_API_KEY     as string
+  const apiKey = import.meta.env.VITE_GOOGLE_API_KEY as string
 
   useEffect(() => {
     if (!calendarId || !apiKey) return
@@ -44,16 +43,29 @@ const CalendarView: React.FC = () => {
         const res = await fetch(url)
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const data = await res.json()
+
         if (Array.isArray(data.items)) {
           setEvents(
-            data.items.map((item: any) => ({
-              title:       item.summary || 'No title',
-              start:       new Date(item.start.dateTime ?? item.start.date),
-              end:         new Date(item.end.dateTime   ?? item.end.date),
-              description: item.description,
-              location:    item.location,
-              htmlLink:    item.htmlLink,
-            }))
+            data.items.map((item: any) => {
+              const timeZone = item.start.timeZone || 'America/New_York'
+
+              const start = item.start.dateTime
+                ? moment.tz(item.start.dateTime, timeZone).toDate()
+                : moment.tz(item.start.date, timeZone).startOf('day').toDate()
+
+              const end = item.end.dateTime
+                ? moment.tz(item.end.dateTime, timeZone).toDate()
+                : moment.tz(item.end.date, timeZone).endOf('day').toDate()
+
+              return {
+                title: item.summary || 'No title',
+                start,
+                end,
+                description: item.description,
+                location: item.location,
+                htmlLink: item.htmlLink,
+              }
+            })
           )
         }
       } catch (err) {
@@ -100,7 +112,7 @@ const CalendarView: React.FC = () => {
               <strong>Start:</strong> {selectedEvent.start.toLocaleString()}
             </p>
             <p className="mb-2">
-              <strong>End:</strong>   {selectedEvent.end.toLocaleString()}
+              <strong>End:</strong> {selectedEvent.end.toLocaleString()}
             </p>
             {selectedEvent.location && (
               <p className="mb-2">
@@ -110,7 +122,7 @@ const CalendarView: React.FC = () => {
 
             {selectedEvent.description && (
               <div className="mb-4">
-                <strong>Description:</strong><br/>
+                <strong>Description:</strong><br />
                 <div
                   ref={descRef}
                   className="mt-2 prose prose-invert whitespace-pre-wrap"
