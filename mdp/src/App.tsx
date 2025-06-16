@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Header from "./Header";
@@ -11,6 +10,7 @@ const MuddyDuck = lazy(() => import("./MuddyDuck"));
 const CleverGirl = lazy(() => import("./CleverGirl"));
 const Calendar = lazy(() => import("./Calendar"));
 const OnX = lazy(() => import("./OnX"));
+const Gallery = lazy(() => import("./Gallery"));
 
 export default function App() {
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -36,6 +36,7 @@ export default function App() {
             <Route path="/clevergirl" element={<CleverGirl />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/OnX" element={<OnX />} />
+            <Route path="/gallery" element={<Gallery />} /> {/* ✅ Fixed route */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
